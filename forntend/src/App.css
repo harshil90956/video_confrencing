@@ -1,0 +1,158 @@
+/* General Styles */
+.landingPageContainer {
+  width: 100vw;
+  height: 100vh;
+  background: url("/public/background.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Navbar Styling */
+.landingPageContainer nav {
+  padding-inline: 1.2rem;
+  padding-block: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Allow wrapping */
+}
+
+.landingPageContainer nav h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.landingPageContainer nav .navList {
+  display: flex;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+/* Responsive Navbar for Mobile */
+@media (max-width: 600px) {
+  .landingPageContainer nav {
+    flex-direction: column; /* Stack nav elements */
+    align-items: flex-start;
+    padding-inline: 1rem;
+  }
+
+  .landingPageContainer nav .navList {
+    flex-direction: column; /* Make list vertical */
+    align-items: flex-start;
+    gap: 0.8rem;
+    margin-top: 1rem;
+  }
+}
+
+/* Main Landing Section */
+.landingMainContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-inline: 3rem;
+  height: 80vh;
+}
+
+/* Left Section (Text & Button) */
+.landingMainContainer > div:nth-child(1) {
+  font-size: 2.2rem;
+  flex: 1;
+}
+
+.landingMainContainer > div:nth-child(1) div[role='button'] {
+  background: #D97500;
+  width: fit-content;
+  padding: 1rem;
+  border-radius: 20px;
+  margin-top: 1.5rem;
+}
+
+.landingMainContainer > div:nth-child(1) div[role='button'] a {
+  text-decoration: none;
+  color: white;
+  font-size: 1.5rem;
+}
+
+/* Right Section (Image) */
+.landingMainContainer > div:nth-child(2) img {
+  height: 60vh;
+  width: auto;
+  flex: 1;
+  object-fit: contain; /* Maintain aspect ratio */
+}
+
+/* Adjustments for Small Devices (Phones) */
+@media (max-width: 600px) {
+  .landingMainContainer {
+    flex-direction: column;
+    padding-inline: 1rem;
+    height: auto;
+    gap: 1.5rem;
+  }
+
+  .landingMainContainer > div:nth-child(1) {
+    font-size: 1.6rem;
+    text-align: center;
+  }
+
+  .landingMainContainer > div:nth-child(2) img {
+    height: 35vh; /* Adjust image height for mobile */
+  }
+}
+
+/* Adjustments for Tablets */
+@media (max-width: 1024px) {
+  .landingMainContainer {
+    flex-direction: column;
+    height: auto;
+    gap: 2rem;
+  }
+
+  .landingMainContainer > div:nth-child(2) img {
+    height: 45vh;
+  }
+}
+
+/* Large Screen Styling */
+@media (min-width: 1025px) {
+  .landingMainContainer {
+    padding-inline: 6rem;
+  }
+}
+
+
+.navBar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 20px; 
+  text-align: center;
+}
+
+.meetContainer{
+  display: flex;
+  padding-inline: 20px;
+  height: 80vh;
+  gap: 10vw;
+  justify-content: center;
+}
+
+.leftPanel{
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.rightPanel{
+  display: flex;
+  align-items: center;
+}
+
+.rightPanel > img{
+  width: 30vw;
+  height: auto;
+  border-radius: 20px;
+}

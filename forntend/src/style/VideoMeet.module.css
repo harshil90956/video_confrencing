@@ -1,59 +1,332 @@
-.meetVideoContainer {
-    position: relative;
-    height: 100vh;
-    background: rgb(11, 15, 71);
+/* CONTAINER AND SCROLL FIXES */
+.container {
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #1c1c1c;
+  position: relative;
 }
 
-.meetUserVideo {
-    position: absolute;
-    bottom: 10vh;
-    height: 20vh;
-    width: auto;
-    left: 0;
-    border-radius: 20px;
+.meetContainer {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px;
+  background: #1c1c1c;
+  position: relative;
 }
 
-.buttonContainers {
-    position: absolute;
-    width: 100vw;
-    bottom: 0;
-    text-align: center;
+/* 🚀 ULTIMATE VIDEO GRID - COMBINED SOLUTION */
+.videoGrid {
+  flex: 1;
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  
+  /* 🛡️ PRIMARY: CSS-only auto layout as fallback */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-auto-rows: minmax(200px, 1fr);
+  
+  /* 🎯 Perfect centering and alignment */
+  justify-content: center;
+  align-content: center;
+  justify-items: center;
+  align-items: center;
+  
+  /* Smooth transitions */
+  transition: all 0.3s ease;
 }
 
-.buttonContainers svg {
-    font-size: 3rem;
+/* 🚀 SPECIFIC LAYOUTS FOR 1-9 USERS (JavaScript Enhanced) */
+
+/* 1 User - Full Screen */
+.oneUser {
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 1fr !important;
 }
 
-.conferenceView { 
-    display: flex;
-    padding: 10px;
-    gap: 10px;
+/* 2 Users - Side by Side */
+.twoUsers {
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-rows: 1fr !important;
 }
 
-.conferenceView video {
-    width: 40vw;
-    height: 20vh;
-    min-width: 30vw;
-    border-radius: 10px;
+/* 🎯 CRITICAL FIX: 3 Users - Triangular Layout */
+.threeUsers {
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr !important;
+  grid-template-areas: 
+    "user1 user2"
+    "user3 user3" !important;
 }
 
-.chatRoom {
-    position: absolute;
-    height: 90vh;
-    right: 0;
-    background: white;
-    border-radius: 10px;
-    width: 30vw;
-    padding-inline: 20px;
+.threeUsers .videoTile:nth-child(1) {
+  grid-area: user1 !important;
 }
 
-.chatContainer {
-    position: relative;
-    height: 100%;
+.threeUsers .videoTile:nth-child(2) {
+  grid-area: user2 !important;
 }
 
+.threeUsers .videoTile:nth-child(3) {
+  grid-area: user3 !important;
+}
 
-.chattingArea {
-    position: absolute;
-    bottom: 0;
+/* 4 Users - Perfect Grid */
+.fourUsers {
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr !important;
+}
+
+/* 5 Users - Smart Layout */
+.fiveUsers {
+  grid-template-columns: 1fr 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr !important;
+  grid-template-areas: 
+    "user1 user1 user2"
+    "user3 user4 user5" !important;
+}
+
+.fiveUsers .videoTile:nth-child(1) { grid-area: user1 !important; }
+.fiveUsers .videoTile:nth-child(2) { grid-area: user2 !important; }
+.fiveUsers .videoTile:nth-child(3) { grid-area: user3 !important; }
+.fiveUsers .videoTile:nth-child(4) { grid-area: user4 !important; }
+.fiveUsers .videoTile:nth-child(5) { grid-area: user5 !important; }
+
+/* 6 Users - 3x2 Grid */
+.sixUsers {
+  grid-template-columns: 1fr 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr !important;
+}
+
+/* 7 Users - Enhanced Layout */
+.sevenUsers {
+  grid-template-columns: 1fr 1fr 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr !important;
+  grid-template-areas: 
+    "user1 user1 user2 user3"
+    "user4 user5 user6 user7" !important;
+}
+
+.sevenUsers .videoTile:nth-child(1) { grid-area: user1 !important; }
+.sevenUsers .videoTile:nth-child(2) { grid-area: user2 !important; }
+.sevenUsers .videoTile:nth-child(3) { grid-area: user3 !important; }
+.sevenUsers .videoTile:nth-child(4) { grid-area: user4 !important; }
+.sevenUsers .videoTile:nth-child(5) { grid-area: user5 !important; }
+.sevenUsers .videoTile:nth-child(6) { grid-area: user6 !important; }
+.sevenUsers .videoTile:nth-child(7) { grid-area: user7 !important; }
+
+/* 8 Users - 4x2 Grid */
+.eightUsers {
+  grid-template-columns: 1fr 1fr 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr !important;
+}
+
+/* 9 Users - 3x3 Grid */
+.nineUsers {
+  grid-template-columns: 1fr 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr 1fr !important;
+}
+
+/* Many Users - Dynamic Calculation */
+.manyUsers {
+  /* Inline styles from JavaScript will override this */
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  grid-auto-rows: minmax(180px, 1fr) !important;
+}
+
+/* 🎯 PERFECTED VIDEO TILE STYLES */
+.videoTile {
+  position: relative;
+  background: #2d2d2d;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  
+  /* 🚀 CRITICAL: Perfect 16:9 aspect ratio enforcement */
+  aspect-ratio: 16/9;
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+}
+
+.videoTile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.localVideo {
+  border: 3px solid #4285f4;
+  box-shadow: 0 4px 25px rgba(66, 133, 244, 0.3);
+}
+
+.videoElement {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #1a1a1a;
+}
+
+.videoOverlay {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px 12px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.videoTile:hover .videoOverlay {
+  background: rgba(0, 0, 0, 0.8);
+  transform: translateY(-1px);
+}
+
+.userName {
+  font-size: 0.8rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.videoOffIndicator {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* LOADING STYLES */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #1c1c1c;
+  color: white;
+}
+
+.loadingSpinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #4285f4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 🚀 ENHANCED RESPONSIVE BREAKPOINTS */
+
+/* 📱 Mobile (0px - 768px) */
+@media (max-width: 768px) {
+  .videoGrid {
+    gap: 6px;
+    padding: 6px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    grid-auto-rows: minmax(150px, 1fr) !important;
+  }
+  
+  .videoTile {
+    min-height: 150px;
+  }
+  
+  /* Mobile-specific layouts */
+  .threeUsers {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: repeat(3, 1fr) !important;
+    grid-template-areas: 
+      "user1"
+      "user2" 
+      "user3" !important;
+  }
+  
+  .fiveUsers {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: repeat(3, 1fr) !important;
+    grid-template-areas: 
+      "user1 user2"
+      "user3 user4"
+      "user5 user5" !important;
+  }
+}
+
+/* 💻 Medium (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .videoGrid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+    grid-auto-rows: minmax(180px, 1fr) !important;
+  }
+  
+  .videoTile {
+    min-height: 180px;
+  }
+}
+
+/* 🖥️ Large (1025px - 1440px) */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .videoGrid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+    grid-auto-rows: minmax(220px, 1fr) !important;
+  }
+  
+  .videoTile {
+    min-height: 220px;
+  }
+}
+
+/* 🖥️ Extra Large (1441px+) */
+@media (min-width: 1441px) {
+  .videoGrid {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)) !important;
+    grid-auto-rows: minmax(250px, 1fr) !important;
+  }
+  
+  .videoTile {
+    min-height: 250px;
+  }
+}
+
+/* 🛡️ FALLBACK SAFETY MECHANISMS */
+
+/* Ensure all video tiles are visible even if CSS fails */
+.videoTile {
+  /* Double protection */
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Debug helper - shows user count in dev mode */
+.videoGrid::before {
+  content: attr(data-user-count) " users";
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  z-index: 1000;
+  display: none; /* Enable for debugging */
 }

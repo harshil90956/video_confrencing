@@ -1,0 +1,81 @@
+/* LobbyDialog.module.css */
+.lobbyDialog .MuiDialog-paper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.lobbyContainer {
+  background: white;
+  padding: 0;
+}
+
+.lobbyTitle {
+  text-align: center;
+  background: #f8f9fa;
+  padding: 24px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.lobbyContent {
+  padding: 32px 24px 16px;
+  text-align: center;
+}
+
+.userAvatar {
+  width: 80px;
+  height: 80px;
+  background: #4285f4;
+  margin: 0 auto;
+}
+
+.nameInput {
+  margin-bottom: 8px;
+}
+
+.nameInput .MuiOutlinedInput-root {
+  border-radius: 8px;
+}
+
+.lobbyActions {
+  padding: 0 24px 24px;
+  justify-content: center;
+}
+
+.joinButton {
+  background: #4285f4 !important;
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  font-size: 1rem !important;
+  box-shadow: none !important;
+}
+
+.joinButton:hover {
+  background: #3367d6 !important;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3) !important;
+}
+
+.joinButton:disabled {
+  background: #ccc !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .lobbyContent {
+    padding: 24px 20px 12px;
+  }
+  
+  .userAvatar {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .lobbyTitle {
+    padding: 20px;
+  }
+  
+  .lobbyActions {
+    padding: 0 20px 20px;
+  }
+}

@@ -21,7 +21,7 @@ import {
     Visibility, 
     VisibilityOff, 
     Person, 
-    Email
+    PersonOutline // Username ke liye naya icon
 } from '@mui/icons-material';
 import { AuthContext } from '../contexts/AuthContext.jsx';
 
@@ -467,18 +467,19 @@ export default function Authentication() {
                                     />
                                 )}
 
+                                {/* Username Field - Email ki jagah */}
                                 <TextField
                                     margin="normal"
                                     required
                                     fullWidth
-                                    label="Email Address"
+                                    label="Username"
                                     value={username}
                                     autoFocus={formState === 0}
                                     onChange={(e) => setUsername(e.target.value)}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
-                                                <Email 
+                                                <PersonOutline 
                                                     fontSize="small" 
                                                     color="primary" 
                                                 />
@@ -491,6 +492,8 @@ export default function Authentication() {
                                             height: { xs: 48, md: 46, lg: 56 }
                                         }
                                     }}
+                                    placeholder="Enter your username"
+                                    helperText={formState === 1 ? "Choose a unique username" : ""}
                                 />
 
                                 <TextField
@@ -528,6 +531,8 @@ export default function Authentication() {
                                             height: { xs: 48, md: 46, lg: 56 }
                                         }
                                     }}
+                                    placeholder="Enter your password"
+                                    helperText={formState === 1 ? "Use a strong password" : ""}
                                 />
 
                                 {/* Error Message */}

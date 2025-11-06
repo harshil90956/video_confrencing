@@ -735,11 +735,15 @@ export const useVideoCall = (localVideoRef, routeTo) => {
     }, [routeTo, cleanupPeerResources]);
 
     const addMessage = useCallback((data, sender, socketIdSender) => {
-        const newMessage = { 
-            sender, 
-            data, 
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-        };
+    console.log('💬 Adding message:', { data, sender, socketIdSender, currentUser: socketIdRef.current });
+    
+    const newMessage = { 
+        sender, 
+        data, 
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isOwn: socketIdSender === socketIdRef.current // ✅ Identify own messages
+    };
+
         
         setMessages((prevMessages) => [...prevMessages, newMessage]);
         
@@ -748,12 +752,33 @@ export const useVideoCall = (localVideoRef, routeTo) => {
         }
     }, []);
 
-    const sendMessage = useCallback(() => {
-        if (message.trim() && socketRef.current) {
-            socketRef.current.emit('chat-message', message, username);
-            setMessage("");
-        }
-    }, [message, username]);
+   const sendMessage = useCallback(() => {
+    if (message.trim() && socketRef.current) {
+        console.log('📤 Sending message:', message);
+        
+        // ✅ FIX: Immediately add message to local state
+        const ownMessage = {
+            sender: username,
+            data: message,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isOwn: true
+        };
+        
+        // Add to messages immediately
+        setMessages((prevMessages) => [...prevMessages, ownMessage]);
+        setMessage("");
+        
+        // ✅ Send to server
+        socketRef.current.emit('chat-message', message, username);
+        
+        // ✅ Scroll to bottom after adding message
+        // setTimeout(() => {
+        //     if (chatContainerRef.current) {
+        //         chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        //     }
+        // }, 100);
+    }
+}, [message, username]);
 
     const connect = useCallback(() => {
         if (username.trim()) {

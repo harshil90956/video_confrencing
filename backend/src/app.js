@@ -22,7 +22,7 @@ app.use(cors({
 
 
 app.set("port",(8000));
-app.use("/api/v1/users",userRouter);
+app.use("/",userRouter);
 
 
 

@@ -15,7 +15,9 @@ export const black = ({ width = 640, height = 480 } = {}) => {
 };
 
 export const createBlackSilenceStream = () => {
-    return new MediaStream([black(), silence()]);
+    const blackTrack = black();
+    const silenceTrack = silence();
+    return new MediaStream([blackTrack, silenceTrack]);
 };
 
 // Adaptive quality constraints
@@ -35,4 +37,16 @@ export const getVideoConstraints = (quality = 'hd') => {
                 frameRate: { ideal: 30 }
             };
     }
+};
+
+// Check if stream has active tracks
+export const isStreamActive = (stream) => {
+    if (!stream) return false;
+    const videoTracks = stream.getVideoTracks();
+    const audioTracks = stream.getAudioTracks();
+    
+    return (
+        videoTracks.length > 0 && videoTracks[0].readyState === 'live' ||
+        audioTracks.length > 0 && audioTracks[0].readyState === 'live'
+    );
 };

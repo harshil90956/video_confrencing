@@ -36,7 +36,9 @@ export default function VideoMeetComponent() {
         connect,
     } = useVideoCall(localVideoRef, routeTo);
 
-    // 🚀 FIX: Move all hooks to the top level - no conditional returns before hooks
+    
+
+    // Move all hooks to the top level
     const { gridClass, gridStyle, displayUsers } = useMemo(() => {
         const totalUsers = users.length;
         let gridClass = '';
@@ -83,7 +85,7 @@ export default function VideoMeetComponent() {
                 break;
         }
 
-        // 🚀 FIX: Ensure we have users to display
+        // Ensure we have users to display
         const localUser = mediaReady && localStream ? {
             id: 'local',
             name: username,
@@ -96,8 +98,28 @@ export default function VideoMeetComponent() {
         const remoteUsers = users.filter(user => !user.isYou);
         const displayUsers = localUser ? [localUser, ...remoteUsers] : remoteUsers;
 
+        console.log('🔄 Display Users:', displayUsers.length, 'Layout:', gridClass);
+
         return { gridClass, gridStyle, displayUsers };
     }, [users, localStream, mediaReady, username, styles]);
+
+
+
+
+useEffect(() => {
+    console.log('🔍 USERS DATA:', users);
+    console.log('🔍 DISPLAY USERS:', displayUsers);
+    
+    // Check each user's name
+    displayUsers.forEach((user, index) => {
+        console.log(`User ${index}:`, {
+            id: user.id,
+            name: user.name,
+            isYou: user.isYou,
+            hasStream: !!user.stream
+        });
+    });
+}, [users, displayUsers]);
 
     useEffect(() => {
         if (chatContainerRef.current) {
@@ -111,10 +133,7 @@ export default function VideoMeetComponent() {
         }
     };
 
-    // Debug logging to verify all users are processed
-    console.log('🔄 Current users:', displayUsers.length, 'Layout:', gridClass);
-
-    // 🚀 FIX: Move conditional rendering AFTER all hooks
+    // Move conditional rendering AFTER all hooks
     if (askForUsername) {
         return (
             <div className={styles.container}>
@@ -141,7 +160,7 @@ export default function VideoMeetComponent() {
     return (
         <div className={styles.container}>
             <div className={styles.meetContainer}>
-                {/* 🚀 ULTIMATE GRID SOLUTION: Combined CSS classes + inline styles */}
+                {/* Video Grid */}
                 <div 
                     className={`${styles.videoGrid} ${gridClass}`}
                     style={gridStyle}

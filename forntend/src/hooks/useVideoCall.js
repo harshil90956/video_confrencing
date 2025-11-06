@@ -6,7 +6,8 @@ import { createBlackSilenceStream } from '../utils/mediaUtils';
 const server_url = server;
 const peerConfigConnections = {
     "iceServers": [
-        { "urls": "stun:stun.l.google.com:19302" }
+        { "urls": "stun:stun.l.google.com:19302" },
+        { "urls": "stun:stun1.l.google.com:19302" }
     ]
 };
 
@@ -17,7 +18,6 @@ export const useVideoCall = (localVideoRef, routeTo) => {
     const videoRefs = useRef(new Map());
     const localStreamRef = useRef(null);
     
-    // 🚨 CRITICAL FIX: ICE Candidate Buffering
     const iceCandidateBuffers = useRef(new Map());
 
     // State
@@ -36,10 +36,9 @@ export const useVideoCall = (localVideoRef, routeTo) => {
     const [users, setUsers] = useState([]);
     const [mediaReady, setMediaReady] = useState(false);
 
-    // 🚨 CRITICAL FIX: ICE Candidate Buffer Management
+    // ICE Candidate Buffer Management
     const initializeIceCandidateBuffer = useCallback((peerId) => {
         iceCandidateBuffers.current.set(peerId, []);
-        console.log(`📦 Initialized ICE candidate buffer for ${peerId}`);
     }, []);
 
     const addIceCandidateToBuffer = useCallback((peerId, candidate) => {
@@ -47,7 +46,6 @@ export const useVideoCall = (localVideoRef, routeTo) => {
             initializeIceCandidateBuffer(peerId);
         }
         iceCandidateBuffers.current.get(peerId).push(candidate);
-        console.log(`📦 Buffered ICE candidate for ${peerId}, total: ${iceCandidateBuffers.current.get(peerId).length}`);
     }, [initializeIceCandidateBuffer]);
 
     const flushIceCandidateBuffer = useCallback(async (peerId) => {
@@ -55,40 +53,32 @@ export const useVideoCall = (localVideoRef, routeTo) => {
         const pc = connections.current[peerId];
         
         if (!buffer || !pc || !pc.remoteDescription) {
-            console.log(`📦 No buffer to flush for ${peerId}`);
             return;
         }
-        
-        console.log(`📦 Flushing ICE candidate buffer for ${peerId}: ${buffer.length} candidates`);
         
         for (const candidate of buffer) {
             try {
                 await pc.addIceCandidate(candidate);
-                console.log('✅ Successfully added buffered ICE candidate');
             } catch (error) {
-                console.error('❌ Error adding buffered ICE candidate:', error);
+                console.error('Error adding buffered ICE candidate:', error);
             }
         }
         
-        // Clear the buffer after processing
         iceCandidateBuffers.current.set(peerId, []);
     }, []);
 
     const cleanupPeerResources = useCallback((peerId) => {
         console.log(`🧹 Cleaning up resources for peer: ${peerId}`);
         
-        // Remove from connections
         if (connections.current[peerId]) {
             connections.current[peerId].close();
             delete connections.current[peerId];
         }
         
-        // Remove from video refs
         if (videoRefs.current.has(peerId)) {
             videoRefs.current.delete(peerId);
         }
         
-        // 🚨 CRITICAL: Clean up ICE candidate buffer
         if (iceCandidateBuffers.current.has(peerId)) {
             iceCandidateBuffers.current.delete(peerId);
         }
@@ -97,7 +87,6 @@ export const useVideoCall = (localVideoRef, routeTo) => {
     // Media Functions
     const getPermissions = async () => {
         try {
-            // Test video permission
             try {
                 const videoPermission = await navigator.mediaDevices.getUserMedia({ 
                     video: { width: 1280, height: 720 } 
@@ -105,18 +94,17 @@ export const useVideoCall = (localVideoRef, routeTo) => {
                 setVideoAvailable(true);
                 videoPermission.getTracks().forEach(track => track.stop());
             } catch (videoError) {
+                console.log('Video permission denied');
                 setVideoAvailable(false);
-                console.log('Video permission denied:', videoError);
             }
 
-            // Test audio permission
             try {
                 const audioPermission = await navigator.mediaDevices.getUserMedia({ audio: true });
                 setAudioAvailable(true);
                 audioPermission.getTracks().forEach(track => track.stop());
             } catch (audioError) {
+                console.log('Audio permission denied');
                 setAudioAvailable(false);
-                console.log('Audio permission denied:', audioError);
             }
 
             setScreenAvailable(!!navigator.mediaDevices.getDisplayMedia);
@@ -127,7 +115,6 @@ export const useVideoCall = (localVideoRef, routeTo) => {
 
     const initializeMedia = async () => {
         try {
-            // Stop any existing stream
             if (localStreamRef.current) {
                 localStreamRef.current.getTracks().forEach(track => track.stop());
                 localStreamRef.current = null;
@@ -143,7 +130,7 @@ export const useVideoCall = (localVideoRef, routeTo) => {
                     audio: audio && audioAvailable
                 };
 
-                console.log('🎥 Getting user media with constraints:', constraints);
+                console.log('🎥 Initializing media with constraints:', constraints);
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 
                 localStreamRef.current = stream;
@@ -152,10 +139,10 @@ export const useVideoCall = (localVideoRef, routeTo) => {
                     await localVideoRef.current.play().catch(console.log);
                 }
                 
-                console.log('✅ Media initialized successfully');
                 setMediaReady(true);
+                console.log('✅ Media initialized successfully');
             } else {
-                // Both video and audio are disabled
+                console.log('🖥️ Using black silence stream');
                 const blackStream = createBlackSilenceStream();
                 localStreamRef.current = blackStream;
                 if (localVideoRef.current) {
@@ -165,7 +152,6 @@ export const useVideoCall = (localVideoRef, routeTo) => {
             }
         } catch (error) {
             console.error('❌ Error accessing media devices:', error);
-            // Fallback to black silence
             const blackStream = createBlackSilenceStream();
             localStreamRef.current = blackStream;
             if (localVideoRef.current) {
@@ -185,7 +171,6 @@ export const useVideoCall = (localVideoRef, routeTo) => {
             
             setScreen(true);
             
-            // Replace tracks in peer connections instead of stopping stream
             if (localStreamRef.current) {
                 replaceTracksInPeerConnections(stream);
             }
@@ -195,14 +180,11 @@ export const useVideoCall = (localVideoRef, routeTo) => {
                 localVideoRef.current.srcObject = stream;
             }
             
-            console.log("🖥️ Screen share started");
-            
-            // Handle screen share end
             stream.getTracks().forEach(track => {
                 track.onended = async () => {
                     console.log('🖥️ Screen share ended');
                     setScreen(false);
-                    await initializeMedia(); // Switch back to camera
+                    await initializeMedia();
                 };
             });
         } catch (error) {
@@ -211,134 +193,157 @@ export const useVideoCall = (localVideoRef, routeTo) => {
         }
     };
 
-    // Improved track replacement for screen sharing
     const replaceTracksInPeerConnections = (newStream) => {
-        Object.values(connections.current).forEach(pc => {
+        Object.entries(connections.current).forEach(([peerId, pc]) => {
             const senders = pc.getSenders();
             
-            // Replace video track
             const videoTrack = newStream.getVideoTracks()[0];
             if (videoTrack) {
                 const videoSender = senders.find(s => s.track && s.track.kind === 'video');
                 if (videoSender) {
                     videoSender.replaceTrack(videoTrack).catch(console.log);
                 } else {
-                    // Add track if no sender exists
                     pc.addTrack(videoTrack, newStream);
                 }
             }
             
-            // Replace audio track if available
             const audioTrack = newStream.getAudioTracks()[0];
             if (audioTrack) {
                 const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
                 if (audioSender) {
                     audioSender.replaceTrack(audioTrack).catch(console.log);
                 } else {
-                    // Add track if no sender exists
                     pc.addTrack(audioTrack, newStream);
                 }
             }
         });
     };
 
-    // Update peer connections when initializing media
-    const updatePeerConnectionTracks = (stream) => {
-        Object.values(connections.current).forEach(pc => {
-            const senders = pc.getSenders();
-            
-            // Check if we need to add tracks (for new connections)
-            if (senders.length === 0) {
-                stream.getTracks().forEach(track => {
-                    pc.addTrack(track, stream);
-                });
-            } else {
-                // Update existing tracks
-                const videoTrack = stream.getVideoTracks()[0];
-                const audioTrack = stream.getAudioTracks()[0];
-                
-                senders.forEach(sender => {
-                    if (sender.track) {
-                        if (sender.track.kind === 'video' && videoTrack) {
-                            sender.replaceTrack(videoTrack).catch(console.log);
-                        } else if (sender.track.kind === 'audio' && audioTrack) {
-                            sender.replaceTrack(audioTrack).catch(console.log);
-                        }
-                    }
-                });
-            }
-        });
-    };
-
-    // WebRTC Functions with ICE Candidate Buffering
+    // WebRTC Functions - FIXED VERSION
     const createPeerConnection = useCallback((peerId) => {
         console.log(`🔗 Creating peer connection for: ${peerId}`);
+        
         const pc = new RTCPeerConnection(peerConfigConnections);
         
-        // 🚨 CRITICAL: Initialize ICE candidate buffer for this peer
         initializeIceCandidateBuffer(peerId);
         
         pc.onicecandidate = (event) => {
             if (event.candidate) {
-                console.log(`📤 Sending ICE candidate to ${peerId}`);
+                console.log(`🧊 Sending ICE candidate to ${peerId}`);
                 socketRef.current.emit('signal', peerId, JSON.stringify({ 'ice': event.candidate }));
             }
         };
 
         pc.ontrack = (event) => {
-            console.log('🎬 Track received from peer:', peerId, event.streams);
+            console.log(`🎥 Track received from ${peerId}:`, event.streams.length);
+            
             if (event.streams && event.streams[0]) {
+                const remoteStream = event.streams[0];
+                
+                // Monitor stream tracks
+                remoteStream.getTracks().forEach(track => {
+                    console.log(`📊 Track ${track.kind} from ${peerId}:`, track.readyState);
+                    
+                    track.onended = () => {
+                        console.log(`⏹️ Track ended for ${peerId}`);
+                        updateUser(peerId, { 
+                            videoEnabled: false,
+                            audioEnabled: false 
+                        });
+                    };
+                    
+                    track.onmute = () => {
+                        console.log(`🔇 Track muted for ${peerId}`);
+                    };
+                    
+                    track.onunmute = () => {
+                        console.log(`🔊 Track unmuted for ${peerId}`);
+                    };
+                });
+
                 updateUser(peerId, { 
-                    stream: event.streams[0],
+                    stream: remoteStream,
                     videoEnabled: true,
                     audioEnabled: true 
                 });
+                
+                // Set video element with retry logic
+                const setVideoStream = () => {
+                    if (videoRefs.current.has(peerId)) {
+                        const videoElement = videoRefs.current.get(peerId);
+                        if (videoElement) {
+                            videoElement.srcObject = remoteStream;
+                            videoElement.muted = false; // Important for remote videos
+                            
+                            videoElement.play().then(() => {
+                                console.log(`✅ Video playing for ${peerId}`);
+                            }).catch(error => {
+                                console.log(`❌ Auto-play failed for ${peerId}:`, error);
+                                // Retry after delay
+                                setTimeout(setVideoStream, 500);
+                            });
+                        }
+                    }
+                };
+                
+                setTimeout(setVideoStream, 100);
             }
         };
 
         pc.onconnectionstatechange = () => {
-            console.log(`🔗 Connection state with ${peerId}:`, pc.connectionState);
+            console.log(`🔗 Connection state for ${peerId}:`, pc.connectionState);
             if (pc.connectionState === 'connected') {
-                console.log(`✅ Successfully connected to ${peerId}`);
-            } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+                console.log(`✅ Fully connected to ${peerId}`);
+            } else if (pc.connectionState === 'failed') {
                 console.log(`❌ Connection failed with ${peerId}`);
+                // Attempt to restart connection
+                setTimeout(() => {
+                    if (connections.current[peerId] && connections.current[peerId].connectionState === 'failed') {
+                        console.log(`🔄 Attempting to restart connection with ${peerId}`);
+                        cleanupPeerResources(peerId);
+                        // Re-initiate connection
+                        if (socketRef.current) {
+                            connections.current[peerId] = createPeerConnection(peerId);
+                            createAndSendOffer(peerId);
+                        }
+                    }
+                }, 2000);
             }
         };
 
         pc.oniceconnectionstatechange = () => {
-            console.log(`🧊 ICE connection state with ${peerId}:`, pc.iceConnectionState);
+            console.log(`🧊 ICE connection state for ${peerId}:`, pc.iceConnectionState);
         };
 
-        // Add local stream tracks if available
+        // Add local stream tracks
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => {
                 try {
                     pc.addTrack(track, localStreamRef.current);
-                    console.log(`✅ Added ${track.kind} track to peer ${peerId}`);
+                    console.log(`➕ Added ${track.kind} track to ${peerId}`);
                 } catch (error) {
-                    console.log('❌ Error adding track to peer connection:', error);
+                    console.log('Error adding track to peer connection:', error);
                 }
             });
         }
 
         connections.current[peerId] = pc;
         return pc;
-    }, [initializeIceCandidateBuffer]);
+    }, [initializeIceCandidateBuffer, cleanupPeerResources]);
 
     const createAndSendOffer = useCallback(async (peerId) => {
         const pc = connections.current[peerId];
         if (!pc) {
-            console.error(`❌ No peer connection found for ${peerId}`);
+            console.log(`❌ No peer connection for ${peerId}`);
             return;
         }
 
         try {
-            console.log(`📨 Creating offer for ${peerId}`);
+            console.log(`📤 Creating offer for ${peerId}`);
             
-            // Wait for media to be ready
             if (!mediaReady) {
                 console.log('⏳ Waiting for media to be ready...');
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
             const offer = await pc.createOffer();
@@ -346,35 +351,45 @@ export const useVideoCall = (localVideoRef, routeTo) => {
             
             console.log(`📨 Offer created for ${peerId}, waiting for ICE gathering...`);
             
-            // Wait for ICE gathering to complete with timeout
+            // Wait for ICE gathering to complete
             await new Promise((resolve) => {
+                if (pc.iceGatheringState === 'complete') {
+                    resolve();
+                    return;
+                }
+                
+                const checkIceState = () => {
+                    if (pc.iceGatheringState === 'complete') {
+                        resolve();
+                    } else {
+                        setTimeout(checkIceState, 100);
+                    }
+                };
+                
                 const timeout = setTimeout(() => {
-                    console.log('⏰ ICE gathering timeout, proceeding anyway');
+                    console.log(`⏰ ICE gathering timeout for ${peerId}, sending anyway`);
                     resolve();
                 }, 5000);
                 
-                if (pc.iceGatheringState === 'complete') {
-                    clearTimeout(timeout);
-                    resolve();
-                } else {
-                    pc.onicegatheringstatechange = () => {
-                        if (pc.iceGatheringState === 'complete') {
-                            clearTimeout(timeout);
-                            resolve();
-                        }
-                    };
-                }
+                pc.onicegatheringstatechange = () => {
+                    if (pc.iceGatheringState === 'complete') {
+                        clearTimeout(timeout);
+                        resolve();
+                    }
+                };
+                
+                checkIceState();
             });
             
+            console.log(`🚀 Sending offer to ${peerId}`);
             socketRef.current.emit('signal', peerId, JSON.stringify({ 'sdp': pc.localDescription }));
-            console.log(`✅ Offer sent to: ${peerId}`);
         } catch (error) {
             console.error('❌ Error creating/sending offer:', error);
         }
     }, [mediaReady]);
 
     const handleOffer = useCallback(async (fromId, offer) => {
-        console.log(`📨 Received offer from: ${fromId}`);
+        console.log(`📩 Received offer from ${fromId}`);
         
         if (!connections.current[fromId]) {
             console.log(`🔗 Creating new peer connection for offer from ${fromId}`);
@@ -384,36 +399,62 @@ export const useVideoCall = (localVideoRef, routeTo) => {
         const pc = connections.current[fromId];
 
         try {
-            console.log(`🔧 Setting remote description for ${fromId}`);
+            // Check signaling state
+            if (pc.signalingState !== 'stable') {
+                console.log(`⚠️ Signaling state not stable: ${pc.signalingState}, waiting...`);
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
             await pc.setRemoteDescription(offer);
             console.log(`✅ Remote description set for ${fromId}`);
             
-            // 🚨 CRITICAL: Flush any buffered ICE candidates
             await flushIceCandidateBuffer(fromId);
             
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
+            console.log(`📤 Created answer for ${fromId}`);
+            
+            // Wait for ICE gathering
+            await new Promise(resolve => {
+                if (pc.iceGatheringState === 'complete') {
+                    resolve();
+                    return;
+                }
+                
+                const checkIceState = () => {
+                    if (pc.iceGatheringState === 'complete') {
+                        resolve();
+                    } else {
+                        setTimeout(checkIceState, 100);
+                    }
+                };
+                checkIceState();
+            });
+            
             socketRef.current.emit('signal', fromId, JSON.stringify({ 'sdp': pc.localDescription }));
-            console.log(`✅ Answer sent to: ${fromId}`);
+            console.log(`🚀 Sent answer to ${fromId}`);
         } catch (error) {
             console.error('❌ Error handling offer:', error);
         }
     }, [createPeerConnection, flushIceCandidateBuffer]);
 
     const handleAnswer = useCallback(async (fromId, answer) => {
-        console.log(`📨 Received answer from: ${fromId}`);
+        console.log(`📩 Received answer from ${fromId}`);
+        
         const pc = connections.current[fromId];
         if (!pc) {
-            console.error(`❌ No peer connection found for answer from ${fromId}`);
+            console.log(`❌ No peer connection for ${fromId}`);
             return;
         }
 
         try {
-            console.log(`🔧 Setting remote description (answer) for ${fromId}`);
+            if (pc.signalingState !== 'have-local-offer') {
+                console.log(`⚠️ Cannot set answer, wrong state: ${pc.signalingState}`);
+                return;
+            }
+
             await pc.setRemoteDescription(answer);
-            console.log(`✅ Answer processed from: ${fromId}`);
-            
-            // 🚨 CRITICAL: Flush any buffered ICE candidates
+            console.log(`✅ Remote description set from answer for ${fromId}`);
             await flushIceCandidateBuffer(fromId);
         } catch (error) {
             console.error('❌ Error handling answer:', error);
@@ -421,23 +462,22 @@ export const useVideoCall = (localVideoRef, routeTo) => {
     }, [flushIceCandidateBuffer]);
 
     const handleIceCandidate = useCallback(async (fromId, candidate) => {
-        console.log(`🧊 Received ICE candidate from: ${fromId}`);
+        console.log(`🧊 Received ICE candidate from ${fromId}`);
+        
         const pc = connections.current[fromId];
         if (!pc) {
-            console.error(`❌ No peer connection found for ICE candidate from ${fromId}`);
+            console.log(`❌ No peer connection for ${fromId}, buffering candidate`);
+            addIceCandidateToBuffer(fromId, candidate);
             return;
         }
 
         try {
-            // 🚨 CRITICAL: Check if remote description is set
             if (!pc.remoteDescription) {
-                console.log(`📦 Remote description not set for ${fromId}, buffering ICE candidate`);
+                console.log(`⏳ No remote description yet, buffering ICE candidate for ${fromId}`);
                 addIceCandidateToBuffer(fromId, candidate);
                 return;
             }
             
-            // If remote description is set, process immediately
-            console.log(`✅ Adding ICE candidate to ${fromId}`);
             await pc.addIceCandidate(candidate);
             console.log(`✅ ICE candidate added for ${fromId}`);
         } catch (error) {
@@ -446,14 +486,11 @@ export const useVideoCall = (localVideoRef, routeTo) => {
     }, [addIceCandidateToBuffer]);
 
     const gotMessageFromServer = useCallback((fromId, message) => {
-        if (fromId === socketIdRef.current) {
-            console.log('🔄 Ignoring signal from self');
-            return;
-        }
+        if (fromId === socketIdRef.current) return;
 
         try {
             const signal = JSON.parse(message);
-            console.log(`📡 Signal received from ${fromId}:`, signal.sdp ? 'SDP ' + signal.sdp.type : 'ICE candidate');
+            console.log(`📨 Signal from ${fromId}:`, signal.sdp ? signal.sdp.type : 'ice');
 
             if (signal.sdp) {
                 if (signal.sdp.type === 'offer') {
@@ -465,7 +502,7 @@ export const useVideoCall = (localVideoRef, routeTo) => {
                 handleIceCandidate(fromId, new RTCIceCandidate(signal.ice));
             }
         } catch (error) {
-            console.error('❌ Error parsing signal message:', error);
+            console.error('❌ Error parsing signal:', error);
         }
     }, [handleOffer, handleAnswer, handleIceCandidate]);
 
@@ -474,30 +511,31 @@ export const useVideoCall = (localVideoRef, routeTo) => {
         setUsers(prevUsers => {
             const exists = prevUsers.find(u => u.id === userData.id);
             if (exists) {
-                console.log('👤 User already exists:', userData.name);
+                console.log(`👤 User ${userData.id} already exists`);
                 return prevUsers;
             }
             
             const newUser = { 
                 ...userData, 
                 isSpeaking: false,
-                videoEnabled: true,
-                audioEnabled: true,
+                videoEnabled: userData.videoEnabled !== undefined ? userData.videoEnabled : false,
+                audioEnabled: userData.audioEnabled !== undefined ? userData.audioEnabled : false,
                 joinedAt: Date.now()
             };
             
-            console.log('✅ Adding user:', newUser.name);
+            console.log(`👤 Added new user: ${newUser.id}`, newUser);
             return [...prevUsers, newUser];
         });
     }, []);
 
     const removeUser = useCallback((userId) => {
-        console.log('🗑️ Removing user:', userId);
+        console.log(`👤 Removing user: ${userId}`);
         setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
         cleanupPeerResources(userId);
     }, [cleanupPeerResources]);
 
     const updateUser = useCallback((userId, updates) => {
+        console.log(`👤 Updating user ${userId}:`, updates);
         setUsers(prevUsers => 
             prevUsers.map(user => 
                 user.id === userId ? { ...user, ...updates } : user
@@ -508,7 +546,7 @@ export const useVideoCall = (localVideoRef, routeTo) => {
     // Track control functions
     const handleVideo = useCallback(async () => {
         const newVideoState = !video;
-        console.log('🎥 Toggling video:', newVideoState);
+        console.log(`🎥 Video toggle: ${newVideoState}`);
         setVideo(newVideoState);
         
         if (localStreamRef.current) {
@@ -517,7 +555,6 @@ export const useVideoCall = (localVideoRef, routeTo) => {
                 track.enabled = newVideoState;
             });
             
-            // Update all peer connections with new track state
             Object.values(connections.current).forEach(pc => {
                 const senders = pc.getSenders();
                 senders.forEach(sender => {
@@ -527,14 +564,11 @@ export const useVideoCall = (localVideoRef, routeTo) => {
                 });
             });
 
-            // Update local video display
             if (localVideoRef.current) {
                 if (!newVideoState && videoTracks.length > 0) {
-                    // Show black screen when video is off but keep stream
                     const blackStream = createBlackSilenceStream();
                     localVideoRef.current.srcObject = blackStream;
                 } else if (newVideoState) {
-                    // Restore original stream
                     localVideoRef.current.srcObject = localStreamRef.current;
                 }
             }
@@ -543,7 +577,7 @@ export const useVideoCall = (localVideoRef, routeTo) => {
 
     const handleAudio = useCallback(() => {
         const newAudioState = !audio;
-        console.log('🎤 Toggling audio:', newAudioState);
+        console.log(`🎤 Audio toggle: ${newAudioState}`);
         setAudio(newAudioState);
         
         if (localStreamRef.current) {
@@ -552,7 +586,6 @@ export const useVideoCall = (localVideoRef, routeTo) => {
                 track.enabled = newAudioState;
             });
 
-            // Update all peer connections
             Object.values(connections.current).forEach(pc => {
                 const senders = pc.getSenders();
                 senders.forEach(sender => {
@@ -566,91 +599,111 @@ export const useVideoCall = (localVideoRef, routeTo) => {
 
     const handleScreen = useCallback(async () => {
         if (screen) {
-            // Stop screen share and return to camera
+            console.log('🖥️ Stopping screen share');
             setScreen(false);
             await initializeMedia();
         } else {
-            // Start screen share
+            console.log('🖥️ Starting screen share');
             await getDisplayMedia();
         }
     }, [screen]);
 
-    // Socket connection and messaging
+    // Socket connection
     const connectToSocketServer = useCallback(() => {
-        console.log('🔌 Connecting to socket server...');
-        socketRef.current = io.connect(server_url, { 
-            secure: false,
-            transports: ['websocket', 'polling']
+    console.log('🔌 Connecting to socket server...');
+    
+    socketRef.current = io.connect(server_url, { 
+        secure: false,
+        transports: ['websocket', 'polling']
+    });
+    
+    socketRef.current.on('signal', gotMessageFromServer);
+
+    socketRef.current.on('connect', () => {
+        console.log('✅ Connected to socket server, ID:', socketRef.current.id);
+        
+        // ✅ FIX: Send username along with room join
+        socketRef.current.emit('join-call', { 
+            room: window.location.href, 
+            username: username // ✅ Send username to server
         });
         
-        socketRef.current.on('signal', gotMessageFromServer);
+        socketIdRef.current = socketRef.current.id;
 
-        socketRef.current.on('connect', () => {
-            console.log('✅ Connected to socket server with ID:', socketRef.current.id);
-            socketRef.current.emit('join-call', window.location.href);
-            socketIdRef.current = socketRef.current.id;
-
-            // Add local user
-            addUser({
-                id: socketIdRef.current,
-                name: username,
-                isYou: true,
-                stream: localStreamRef.current,
-                videoEnabled: video,
-                audioEnabled: audio
-            });
-
-            socketRef.current.on('chat-message', addMessage);
-
-            socketRef.current.on('user-left', (id) => {
-                console.log('👋 User left:', id);
-                removeUser(id);
-            });
-
-            socketRef.current.on('user-joined', (id, clients) => {
-                console.log('👋 User joined:', id, 'All clients:', clients);
-                clients.forEach(clientId => {
-                    if (clientId === socketIdRef.current) return;
-
-                    addUser({
-                        id: clientId,
-                        name: `User${clientId.slice(-4)}`,
-                        isYou: false
-                    });
-
-                    if (!connections.current[clientId]) {
-                        connections.current[clientId] = createPeerConnection(clientId);
-                        // Wait a bit for connection to establish before sending offer
-                        setTimeout(() => {
-                            createAndSendOffer(clientId);
-                        }, 1000);
-                    }
-                });
-            });
-
-            socketRef.current.on('existing-users', (existingUsers) => {
-                console.log('👥 Existing users:', existingUsers);
-                existingUsers.forEach(clientId => {
-                    if (clientId === socketIdRef.current) return;
-
-                    addUser({
-                        id: clientId,
-                        name: `User${clientId.slice(-4)}`,
-                        isYou: false
-                    });
-
-                    if (!connections.current[clientId]) {
-                        connections.current[clientId] = createPeerConnection(clientId);
-                        setTimeout(() => {
-                            createAndSendOffer(clientId);
-                        }, 500);
-                    }
-                });
-            });
+        // ✅ FIX: Add local user with actual username
+        addUser({
+            id: socketIdRef.current,
+            name: username, // ✅ Use actual username
+            isYou: true,
+            stream: localStreamRef.current,
+            videoEnabled: video,
+            audioEnabled: audio
         });
 
+        socketRef.current.on('chat-message', addMessage);
+
+        socketRef.current.on('user-left', (id) => {
+            console.log(`👤 User left: ${id}`);
+            removeUser(id);
+        });
+
+        socketRef.current.on('user-joined', (userData) => {
+            // userData should be { id: 'socketId', username: 'actualUsername' }
+            if (userData.id === socketIdRef.current) return;
+
+            console.log(`🆕 User joined: ${userData.username} (${userData.id})`);
+            
+            addUser({
+                id: userData.id,
+                name: userData.username, // ✅ Use actual username from server
+                isYou: false,
+                videoEnabled: false,
+                audioEnabled: false
+            });
+
+            if (!connections.current[userData.id] || connections.current[userData.id].connectionState === 'closed') {
+                console.log(`🔗 Creating peer connection for new user: ${userData.id}`);
+                connections.current[userData.id] = createPeerConnection(userData.id);
+                
+                setTimeout(() => {
+                    if (connections.current[userData.id]) {
+                        createAndSendOffer(userData.id);
+                    }
+                }, 1000);
+            }
+        });
+
+             socketRef.current.on('existing-users', (existingUsers) => {
+            // existingUsers should be array of { id: 'socketId', username: 'actualUsername' }
+            console.log('👥 Existing users:', existingUsers);
+            
+            existingUsers.forEach(userData => {
+                if (userData.id === socketIdRef.current) return;
+
+                addUser({
+                    id: userData.id,
+                    name: userData.username, // ✅ Use actual username from server
+                    isYou: false,
+                    videoEnabled: false,
+                    audioEnabled: false
+                });
+
+                if (!connections.current[userData.id] || connections.current[userData.id].connectionState === 'closed') {
+                    console.log(`🔗 Creating peer connection for existing user: ${userData.id}`);
+                    connections.current[userData.id] = createPeerConnection(userData.id);
+                    
+                    setTimeout(() => {
+                        if (connections.current[userData.id]) {
+                            createAndSendOffer(userData.id);
+                        }
+                    }, 500);
+                }
+            });
+        });
+    });
+
         socketRef.current.on('disconnect', () => {
-            console.log('🔌 Disconnected from socket server');
+            console.log('❌ Disconnected from server');
         });
 
         socketRef.current.on('error', (error) => {
@@ -660,21 +713,16 @@ export const useVideoCall = (localVideoRef, routeTo) => {
 
     const handleEndCall = useCallback(() => {
         console.log('📞 Ending call...');
-        try {
-            if (localStreamRef.current) {
-                localStreamRef.current.getTracks().forEach(track => track.stop());
-                localStreamRef.current = null;
-            }
-        } catch (e) { 
-            console.log('Error stopping tracks:', e);
+        
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current = null;
         }
         
-        // Clean up all peer resources
         Object.keys(connections.current).forEach(peerId => {
             cleanupPeerResources(peerId);
         });
         
-        // Clear ICE candidate buffers
         iceCandidateBuffers.current.clear();
         
         if (socketRef.current) {
@@ -709,8 +757,8 @@ export const useVideoCall = (localVideoRef, routeTo) => {
 
     const connect = useCallback(() => {
         if (username.trim()) {
+            console.log('🚀 Connecting with username:', username);
             setAskForUsername(false);
-            // Initialize media first, then connect to socket
             initializeMedia().then(() => {
                 connectToSocketServer();
             });
@@ -720,11 +768,24 @@ export const useVideoCall = (localVideoRef, routeTo) => {
 
     // Effects
     useEffect(() => {
-        console.log("🎬 Initializing Video Meet");
         getPermissions();
         
+        // Debug connection status
+        const interval = setInterval(() => {
+            console.log('🔍 Connection Status:');
+            Object.keys(connections.current).forEach(peerId => {
+                const pc = connections.current[peerId];
+                console.log(`Peer ${peerId}:`, {
+                    signalingState: pc.signalingState,
+                    connectionState: pc.connectionState,
+                    iceConnectionState: pc.iceConnectionState,
+                    iceGatheringState: pc.iceGatheringState
+                });
+            });
+        }, 15000); // Every 15 seconds
+        
         return () => {
-            console.log("🧹 Cleaning up Video Meet");
+            clearInterval(interval);
             if (localStreamRef.current) {
                 localStreamRef.current.getTracks().forEach(track => track.stop());
             }
@@ -782,6 +843,5 @@ export const useVideoCall = (localVideoRef, routeTo) => {
         connect,
         addMessage,
         videoRefs,
-    
     };
 };

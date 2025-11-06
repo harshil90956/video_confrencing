@@ -21,7 +21,7 @@ import {
     Visibility, 
     VisibilityOff, 
     Person, 
-    PersonOutline // Username ke liye naya icon
+    PersonOutline
 } from '@mui/icons-material';
 import { AuthContext } from '../contexts/AuthContext.jsx';
 
@@ -160,7 +160,7 @@ export default function Authentication() {
             }
         } catch (err) {
             console.error('Error:', err); 
-            const errorMessage = err.response?.data?.message || 'An error occurred!';
+            const errorMessage = err.response?.data?.message || err.message || 'An error occurred!';
             setError(errorMessage);
             setOpen(true);
         } finally {
@@ -182,72 +182,55 @@ export default function Authentication() {
         setError('');
     };
 
+    const handleKeyPress = (event) => {
+        if (event.key === 'Enter') {
+            handleAuth();
+        }
+    };
+
     return (
         <ThemeProvider theme={customTheme}>
             <CssBaseline />
             <Grid container sx={{ height: '100vh', minHeight: 600 }}>
-                {/* Left Side - Background Image with Content - Optimized for Medium Screens */}
+                {/* Left Side - Beautiful Gradient Background */}
                 <Grid
                     item
-                    xs={false}
+                    xs={12}
                     md={6}
-                    lg={7}
                     sx={{
-                        position: 'relative',
-                        display: { 
-                            xs: 'none', 
-                            sm: 'none', 
-                            md: 'flex',
-                            lg: 'flex' 
-                        },
+                        display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        padding: { md: 3, lg: 4 },
+                        padding: { xs: 3, md: 4 },
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+                        }
                     }}
                 >
-                    {/* Background Image Container */}
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundImage: 'url(https://images.unsplash.com/photo-1577495508048-b635879837f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80)',
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            backgroundRepeat: 'no-repeat',
-                            opacity: 0.9,
-                        }}
-                    />
-                    
-                    {/* Dark Overlay for better text readability */}
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        }}
-                    />
-
-                    {/* Content - Optimized for Medium Screens */}
+                    {/* Content */}
                     <Box
                         sx={{
                             position: 'relative',
                             zIndex: 2,
                             color: 'white',
                             textAlign: 'center',
-                            maxWidth: { md: 500, lg: 600 },
-                            px: { md: 3, lg: 4 },
+                            maxWidth: 500,
+                            px: 3,
                         }}
                     >
                         <LockOutlinedIcon 
                             sx={{ 
-                                fontSize: { md: 60, lg: 80 }, 
-                                mb: { md: 2, lg: 3 },
+                                fontSize: { xs: 60, md: 80 }, 
+                                mb: { xs: 2, md: 3 },
                                 color: 'white'
                             }} 
                         />
@@ -257,25 +240,25 @@ export default function Authentication() {
                             gutterBottom
                             sx={{ 
                                 fontWeight: 'bold',
-                                mb: { md: 2, lg: 3 },
-                                textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                                fontSize: { md: '1.75rem', lg: '2.25rem' }
+                                mb: { xs: 2, md: 3 },
+                                textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+                                fontSize: { xs: '2rem', md: '2.5rem', lg: '3rem' }
                             }}
                         >
-                            Welcome to Our Platform
+                            Welcome to BeamTalk
                         </Typography>
                         <Typography 
                             variant="h5"
                             sx={{
-                                mb: { md: 3, lg: 4 },
+                                mb: { xs: 2, md: 3 },
                                 opacity: 0.9,
-                                textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                                fontSize: { md: '1.1rem', lg: '1.25rem' }
+                                textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+                                fontSize: { xs: '1.1rem', md: '1.25rem', lg: '1.5rem' }
                             }}
                         >
                             {formState === 0 
-                                ? 'Sign in to access your personalized dashboard.' 
-                                : 'Join our community and start your journey.'
+                                ? 'Sign in to start video calling with crystal clear quality.' 
+                                : 'Join BeamTalk and experience seamless video conferencing.'
                             }
                         </Typography>
                         <Typography 
@@ -283,44 +266,42 @@ export default function Authentication() {
                             sx={{
                                 opacity: 0.8,
                                 fontStyle: 'italic',
-                                maxWidth: { md: 400, lg: 500 },
+                                maxWidth: 400,
                                 mx: 'auto',
-                                fontSize: { md: '0.9rem', lg: '1rem' }
+                                fontSize: { xs: '0.9rem', md: '1rem' }
                             }}
                         >
-                            "Secure, reliable, and user-friendly authentication"
+                            "Connect, collaborate, and communicate effortlessly"
                         </Typography>
                     </Box>
                 </Grid>
 
-                {/* Right Side - Login Form - Optimized for Medium Screens */}
+                {/* Right Side - Login Form */}
                 <Grid 
                     item 
                     xs={12} 
-                    md={6} 
-                    lg={5}
+                    md={6}
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         backgroundColor: 'background.paper',
                         overflow: 'auto',
-                        py: { xs: 2, md: 3, lg: 4 },
+                        py: { xs: 3, md: 4 },
                     }}
                 >
                     <Container 
                         maxWidth="sm" 
                         sx={{ 
                             py: { 
-                                xs: 3, 
-                                md: 4, 
-                                lg: 8 
-                            },
-                            px: { 
                                 xs: 2, 
-                                sm: 3, 
                                 md: 4, 
                                 lg: 6 
+                            },
+                            px: { 
+                                xs: 3, 
+                                sm: 4, 
+                                md: 6 
                             },
                         }}
                     >
@@ -331,14 +312,13 @@ export default function Authentication() {
                                 alignItems: 'center',
                             }}
                         >
-                            {/* Avatar - Show only on mobile and medium screens */}
+                            {/* Avatar - Show on all screens */}
                             <Avatar
                                 sx={{
-                                    width: { xs: 50, md: 60, lg: 70 },
-                                    height: { xs: 50, md: 60, lg: 70 },
+                                    width: { xs: 60, md: 70 },
+                                    height: { xs: 60, md: 70 },
                                     bgcolor: 'primary.main',
-                                    mb: { xs: 2, md: 3, lg: 3 },
-                                    display: { lg: 'none' }
+                                    mb: 3,
                                 }}
                             >
                                 <LockOutlinedIcon />
@@ -359,7 +339,7 @@ export default function Authentication() {
                                     textAlign: 'center',
                                     fontSize: { 
                                         xs: '1.5rem', 
-                                        md: '1.6rem', 
+                                        md: '1.75rem', 
                                         lg: '2rem' 
                                     }
                                 }}
@@ -371,9 +351,9 @@ export default function Authentication() {
                                 variant="body1" 
                                 color="text.secondary"
                                 sx={{ 
-                                    mb: { xs: 3, md: 3, lg: 4 },
+                                    mb: 4,
                                     textAlign: 'center',
-                                    fontSize: { md: '0.9rem', lg: '1rem' }
+                                    fontSize: { xs: '0.9rem', md: '1rem' }
                                 }}
                             >
                                 {formState === 0 
@@ -382,16 +362,16 @@ export default function Authentication() {
                                 }
                             </Typography>
 
-                            {/* Toggle Buttons - Compact for Medium Screens */}
+                            {/* Toggle Buttons */}
                             <Box
                                 sx={{
                                     display: 'flex',
                                     width: '100%',
-                                    maxWidth: { xs: 280, md: 260, lg: 280 },
+                                    maxWidth: 300,
                                     backgroundColor: 'grey.100',
                                     borderRadius: 2,
                                     p: 0.5,
-                                    mb: { xs: 3, md: 3, lg: 4 },
+                                    mb: 4,
                                 }}
                             >
                                 <Button
@@ -400,10 +380,10 @@ export default function Authentication() {
                                     onClick={switchToSignIn}
                                     sx={{
                                         borderRadius: 1.5,
-                                        py: { xs: 1, md: 1, lg: 1.2 },
-                                        fontSize: { xs: '0.8rem', md: '0.8rem', lg: '0.9rem' },
+                                        py: 1.2,
+                                        fontSize: '0.9rem',
                                         fontWeight: 600,
-                                        minHeight: { xs: 36, md: 38, lg: 40 },
+                                        minHeight: 40,
                                         color: formState === 0 ? 'white' : 'text.secondary',
                                         backgroundColor: formState === 0 ? 'primary.main' : 'transparent',
                                         '&:hover': {
@@ -419,10 +399,10 @@ export default function Authentication() {
                                     onClick={switchToSignUp}
                                     sx={{
                                         borderRadius: 1.5,
-                                        py: { xs: 1, md: 1, lg: 1.2 },
-                                        fontSize: { xs: '0.8rem', md: '0.8rem', lg: '0.9rem' },
+                                        py: 1.2,
+                                        fontSize: '0.9rem',
                                         fontWeight: 600,
-                                        minHeight: { xs: 36, md: 38, lg: 40 },
+                                        minHeight: 40,
                                         color: formState === 1 ? 'white' : 'text.secondary',
                                         backgroundColor: formState === 1 ? 'primary.main' : 'transparent',
                                         '&:hover': {
@@ -434,10 +414,10 @@ export default function Authentication() {
                                 </Button>
                             </Box>
 
-                            {/* Form - Optimized for Medium Screens */}
+                            {/* Form */}
                             <Box sx={{ 
                                 width: '100%', 
-                                maxWidth: { xs: 400, md: 380, lg: 400 } 
+                                maxWidth: 400 
                             }}>
                                 {formState === 1 && (
                                     <TextField
@@ -448,6 +428,7 @@ export default function Authentication() {
                                         value={name}
                                         autoFocus={formState === 1}
                                         onChange={(e) => setName(e.target.value)}
+                                        onKeyPress={handleKeyPress}
                                         InputProps={{
                                             startAdornment: (
                                                 <InputAdornment position="start">
@@ -460,14 +441,12 @@ export default function Authentication() {
                                         }}
                                         sx={{ 
                                             mb: 2,
-                                            '& .MuiInputBase-root': {
-                                                height: { xs: 48, md: 46, lg: 56 }
-                                            }
                                         }}
+                                        placeholder="Enter your full name"
                                     />
                                 )}
 
-                                {/* Username Field - Email ki jagah */}
+                                {/* Username Field */}
                                 <TextField
                                     margin="normal"
                                     required
@@ -476,6 +455,7 @@ export default function Authentication() {
                                     value={username}
                                     autoFocus={formState === 0}
                                     onChange={(e) => setUsername(e.target.value)}
+                                    onKeyPress={handleKeyPress}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -488,14 +468,12 @@ export default function Authentication() {
                                     }}
                                     sx={{ 
                                         mb: 2,
-                                        '& .MuiInputBase-root': {
-                                            height: { xs: 48, md: 46, lg: 56 }
-                                        }
                                     }}
                                     placeholder="Enter your username"
                                     helperText={formState === 1 ? "Choose a unique username" : ""}
                                 />
 
+                                {/* Password Field */}
                                 <TextField
                                     margin="normal"
                                     required
@@ -504,6 +482,7 @@ export default function Authentication() {
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    onKeyPress={handleKeyPress}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -527,9 +506,6 @@ export default function Authentication() {
                                     }}
                                     sx={{ 
                                         mb: 3,
-                                        '& .MuiInputBase-root': {
-                                            height: { xs: 48, md: 46, lg: 56 }
-                                        }
                                     }}
                                     placeholder="Enter your password"
                                     helperText={formState === 1 ? "Use a strong password" : ""}
@@ -542,10 +518,6 @@ export default function Authentication() {
                                         sx={{ 
                                             mb: 2,
                                             borderRadius: 2,
-                                            py: { md: 0.5, lg: 1 },
-                                            '& .MuiAlert-message': {
-                                                fontSize: { md: '0.8rem', lg: '0.875rem' }
-                                            }
                                         }}
                                     >
                                         {error}
@@ -561,20 +533,19 @@ export default function Authentication() {
                                     sx={{
                                         mt: 2,
                                         mb: 2,
-                                        py: { xs: 1.25, md: 1.25, lg: 1.5 },
-                                        fontSize: { xs: '0.9rem', md: '0.9rem', lg: '1rem' },
+                                        py: 1.5,
+                                        fontSize: '1rem',
                                         fontWeight: 'bold',
-                                        minHeight: { xs: 44, md: 42, lg: 48 },
                                         background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
                                         '&:hover': {
                                             background: 'linear-gradient(135deg, #5659e3 0%, #d63f87 100%)',
-                                            transform: { md: 'translateY(-1px)', lg: 'translateY(-2px)' },
-                                            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                                            transform: 'translateY(-2px)',
+                                            boxShadow: '0 8px 25px rgba(99, 102, 241, 0.3)',
                                         },
                                     }}
                                 >
                                     {isLoading ? (
-                                        <CircularProgress size={20} color="inherit" />
+                                        <CircularProgress size={24} color="inherit" />
                                     ) : (
                                         formState === 0 ? 'Sign In' : 'Create Account'
                                     )}
@@ -585,10 +556,7 @@ export default function Authentication() {
                                     variant="body2" 
                                     color="text.secondary" 
                                     align="center"
-                                    sx={{ 
-                                        mt: 3,
-                                        fontSize: { md: '0.8rem', lg: '0.875rem' }
-                                    }}
+                                    sx={{ mt: 3 }}
                                 >
                                     {formState === 0 
                                         ? "Don't have an account? " 
@@ -601,7 +569,7 @@ export default function Authentication() {
                                             color: 'primary.main',
                                             fontWeight: 600,
                                             textTransform: 'none',
-                                            fontSize: { md: '0.8rem', lg: '0.875rem' },
+                                            fontSize: '0.875rem',
                                             p: 0,
                                             ml: 0.5,
                                             minWidth: 'auto',
